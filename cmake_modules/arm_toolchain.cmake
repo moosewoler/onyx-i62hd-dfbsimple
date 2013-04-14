@@ -62,3 +62,6 @@ add_definitions(-DBS97_INIT_MAIN)
 add_definitions(-DSFM_M25P20) 
 
 add_definitions(-DSHARE_ROOT="/usr/share")
+
+add_definitions(-DDATADIR="./share/directfb-examples")
+add_definitions(-DFONT="./share/font/decker.ttf")

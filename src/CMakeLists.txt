@@ -15,7 +15,7 @@ set (SRCS ${HDRS} ${SRCS})
 #set (RESOURCE_SRCS images.qrc)
 #QT4_ADD_RESOURCES(IMAGES_RES ${RESOURCE_SRCS})
 
-add_executable(${OUTPUT_NAME} ${SRCS} ${MOC_SRCS} ${IMAGES_RES})
-target_link_libraries(${OUTPUT_NAME}
+add_executable(${OUTPUT_NAME}.oar ${SRCS} ${MOC_SRCS} ${IMAGES_RES})
+target_link_libraries(${OUTPUT_NAME}.oar
    ${ADD_LIB}
 )
