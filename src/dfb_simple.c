@@ -23,9 +23,9 @@ static int fontheight;
 
 static IDirectFBSurface *logo = NULL;
 
-static IDirectFBVideoProvider   *videoprovider;
-static IDirectFBWindow          *videowindow = NULL;
-static IDirectFBSurface         *videosurface = NULL;
+//static IDirectFBVideoProvider   *videoprovider;
+//static IDirectFBWindow          *videowindow = NULL;
+//static IDirectFBSurface         *videosurface = NULL;
 
 #define DFBCHECK(x...)                                          \
 {                                                               \
@@ -53,25 +53,50 @@ int main (int argc, char **argv)
 {
     int i;
 
+    // 初始化directfb的配置系统
     DFBCHECK (DirectFBInit (&argc, &argv));
-
     DFBCHECK( DirectFBSetOption( "no-vt", NULL ) );                // 由于onyx没有tty0，所以姑且禁用vt
     DFBCHECK( DirectFBSetOption( "disable-module", "tslib" ) );    // 暂不调试触屏，禁用tslib
 
+    // 初始化directfb
     DFBCHECK (DirectFBCreate (&dfb));
     DFBCHECK (dfb->SetCooperativeLevel (dfb, DFSCL_FULLSCREEN));
 
-
-    //// 创建主表面
+    // FIXME: didn't work
+    //// 创建主图层
     //{
-    //    DFBSurfaceDescription dsc;
-    //    dsc.flags = DSDESC_CAPS;
-    //    dsc.caps  = DSCAPS_PRIMARY | DSCAPS_FLIPPING;
-
-    //    DFBCHECK (dfb->CreateSurface( dfb, &dsc, &primary ));
-    //    DFBCHECK (primary->GetSize (primary, &screen_width, &screen_height));
     //    DFBCHECK(dfb->GetDisplayLayer( dfb, DLID_PRIMARY, &layer ));
     //}
+    //// 载入gif
+    //{
+    //    DFBSurfaceDescription sdsc;
+    //    DFBWindowDescription wdsc;
+
+    //    DFBCHECK (dfb->CreateVideoProvider (dfb, DATADIR"/2bittest.gif", &videoprovider));
+    //    DFBCHECK (videoprovider->GetSurfaceDescription (videoprovider, &sdsc));
+    //    wdsc.flags = DWDESC_POSX | DWDESC_POSY | DWDESC_WIDTH | DWDESC_HEIGHT;
+    //    wdsc.posx = 0;
+    //    wdsc.posy = 0;
+    //    wdsc.width = sdsc.width;
+    //    wdsc.height = sdsc.height;
+    //    DFBCHECK(layer->CreateWindow( layer, &wdsc, &videowindow ) );
+    //    DFBCHECK(videowindow->GetSurface( videowindow, &videosurface ) );
+
+    //    videowindow->SetOpacity( videowindow, 0xFF );
+
+    //    DFBCHECK(videoprovider->PlayTo( videoprovider, videosurface, NULL, videoupdate, NULL ));
+    //}
+
+    // 创建主表面
+    {
+        DFBSurfaceDescription dsc;
+        dsc.flags = DSDESC_CAPS;
+        dsc.caps  = DSCAPS_PRIMARY | DSCAPS_FLIPPING;
+
+        DFBCHECK (dfb->CreateSurface( dfb, &dsc, &primary ));
+        DFBCHECK (primary->GetSize (primary, &screen_width, &screen_height));
+        DFBCHECK(dfb->GetDisplayLayer( dfb, DLID_PRIMARY, &layer ));
+    }
 
     //// 载入字体
     //{
@@ -86,40 +111,16 @@ int main (int argc, char **argv)
     //    DFBCHECK(primary->SetFont( primary, font ));
     //}
 
-    //// 载入图片
-    //{
-    //    IDirectFBImageProvider *provider;
-    //    DFBSurfaceDescription dsc;
-
-    //    DFBCHECK (dfb->CreateImageProvider (dfb, DATADIR"/gameboy.png", &provider));
-    //    DFBCHECK (provider->GetSurfaceDescription (provider, &dsc));
-    //    DFBCHECK (dfb->CreateSurface( dfb, &dsc, &logo ));
-    //    DFBCHECK (provider->RenderTo (provider, logo, NULL));
-    //    provider->Release (provider);
-    //}
-
-    // 创建主图层
+    // 载入图片
     {
-        DFBCHECK(dfb->GetDisplayLayer( dfb, DLID_PRIMARY, &layer ));
-    }
-    // 载入gif
-    {
-        DFBSurfaceDescription sdsc;
-        DFBWindowDescription wdsc;
+        IDirectFBImageProvider *provider;
+        DFBSurfaceDescription dsc;
 
-        DFBCHECK (dfb->CreateVideoProvider (dfb, DATADIR"/2bittest.gif", &videoprovider));
-        DFBCHECK (videoprovider->GetSurfaceDescription (videoprovider, &sdsc));
-        wdsc.flags = DWDESC_POSX | DWDESC_POSY | DWDESC_WIDTH | DWDESC_HEIGHT;
-        wdsc.posx = 0;
-        wdsc.posy = 0;
-        wdsc.width = sdsc.width;
-        wdsc.height = sdsc.height;
-        DFBCHECK(layer->CreateWindow( layer, &wdsc, &videowindow ) );
-        DFBCHECK(videowindow->GetSurface( videowindow, &videosurface ) );
-
-        videowindow->SetOpacity( videowindow, 0xFF );
-
-        DFBCHECK(videoprovider->PlayTo( videoprovider, videosurface, NULL, videoupdate, NULL ));
+        DFBCHECK (dfb->CreateImageProvider (dfb, DATADIR"/test.png", &provider));
+        DFBCHECK (provider->GetSurfaceDescription (provider, &dsc));
+        DFBCHECK (dfb->CreateSurface( dfb, &dsc, &logo ));
+        DFBCHECK (provider->RenderTo (provider, logo, NULL));
+        provider->Release (provider);
     }
 
     //// 画线
@@ -138,34 +139,36 @@ int main (int argc, char **argv)
     //}
 
 
-    //// 屏幕刷白
-    //{
-    //    DFBCHECK (primary->SetBlittingFlags(primary, DSBLIT_FLIP_HORIZONTAL | DSBLIT_FLIP_VERTICAL));
-    //    DFBCHECK (primary->SetColor (primary, 0xFF, 0xFF, 0xFF, 0xFF));
-    //    DFBCHECK (primary->FillRectangle (primary, 0, 0, screen_width, screen_height));
-    //    DFBCHECK (primary->Flip (primary, NULL, 0));
-    //    epdc_update(0,0, screen_width, screen_height, WAVEFORM_MODE_GC16, TRUE, 0);
-    //}
+    // 屏幕刷白
+    {
+        DFBCHECK (primary->SetBlittingFlags(primary, DSBLIT_FLIP_HORIZONTAL | DSBLIT_FLIP_VERTICAL));
+        DFBCHECK (primary->SetColor (primary, 0xFF, 0xFF, 0xFF, 0xFF));
+        DFBCHECK (primary->FillRectangle (primary, 0, 0, screen_width, screen_height));
+        DFBCHECK (primary->Flip (primary, NULL, 0));
+        epdc_update(0,0, screen_width, screen_height, WAVEFORM_MODE_GC16, TRUE, 0);
+    }
 
-    //{
-    //    int i;
-    //    for (i=0;i<100;i=i+2)
-    //    {
-    //        DFBCHECK (primary->FillRectangle (primary, 0, 0, screen_width, screen_height));
-    //        DFBCHECK (primary->Blit (primary, logo, NULL, i, i));
-    //        DFBCHECK (primary->Flip (primary, NULL, 0));
-    //        epdc_update(0,0, screen_width, screen_height, WAVEFORM_MODE_A2, TRUE, EPDC_FLAG_FORCE_MONOCHROME);
-    //    }
-    //}
+    {
+        int i;
+        int skip = 12/5;
+        for (i=0;i<500;i+=skip)
+        {
+            DFBCHECK (primary->FillRectangle (primary, 0, 0, screen_width, screen_height));
+            DFBCHECK (primary->SetBlittingFlags(primary, DSBLIT_FLIP_HORIZONTAL | DSBLIT_FLIP_VERTICAL));
+            DFBCHECK (primary->Blit (primary, logo, NULL, i, i));
+            DFBCHECK (primary->Flip (primary, NULL, 0));
+            epdc_update(0,0, screen_width, screen_height, WAVEFORM_MODE_A2, TRUE, 0);
+            //epdc_update(0,0, screen_width, screen_height, WAVEFORM_MODE_GC16, TRUE, 0);
+        }
+    }
 
-    //logo->Release (logo);
-    //primary->Release( primary );
+    //videoprovider->Release (videoprovider);
+    //layer->Release(layer);
     //font->Release( font );
 
-    sleep(20);
+    logo->Release (logo);
+    primary->Release( primary );
 
-    videoprovider->Release (videoprovider);
-    layer->Release(layer);
     dfb->Release( dfb );
     return 23;
 }
