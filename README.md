@@ -4,6 +4,7 @@ onyx-i62hd-dfbsimple
 directfb simple test on onyx i62hd
 
 20130420 directfb结构设计过于复杂，不适合简单设备。
+
 20130414 可以画基本图形，显示文字，显示图片。无法旋转，刷新率略低，大约2fps，是否图片大小问题？
 
 1. ${DFB\_ROOT}/include/directfb和${DFB\_ROOT}/include/directfb-internal
